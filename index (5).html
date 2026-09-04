@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLASS VIII - 5 - Jadwal Piket & Roster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+    :root{
+        --deep: #03045e;
+        --navy: #023e7d;
+        --ocean: #0077b6;
+        --aqua: #00b4d8;
+        --light-aqua: #90e0ef;
+        --foam: #caf0f8;
+        --sand: #ffb703;
+        --coral: #ff8c42;
+        --white: #ffffff;
+    }
+
+    *{ box-sizing: border-box; }
+
+    body{
+        margin: 0;
+        padding: 0;
+        font-family: 'Nunito', sans-serif;
+        color: var(--deep);
+        background: linear-gradient(180deg, var(--foam) 0%, var(--light-aqua) 45%, var(--ocean) 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    body.no-scroll{ overflow: hidden; height: 100vh; }
+
+    h1, h2, .brand{ font-family: 'Baloo 2', cursive; }
+
+    /* ---------- Bubbles background (cheap, transform-only animation) ---------- */
+    .bubbles{
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+    }
+    .bubble{
+        position: absolute;
+        bottom: -60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.35);
+        animation: rise linear infinite;
+        will-change: transform, opacity;
+    }
+    @keyframes rise{
+        0%   { transform: translateY(0) translateX(0); opacity: 0; }
+        10%  { opacity: 0.6; }
+        100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
+    }
+
+    /* ---------- Splash / intro screen ---------- */
+    #splash{
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #03045e 0%, #0077b6 60%, #00b4d8 100%);
+        overflow: hidden;
+        transition: opacity 0.8s ease;
+    }
+    #splash.fade-out{ opacity: 0; pointer-events: none; }
+
+    .dolphin-wrap{
+        position: absolute;
+        top: 45%;
+        left: -150px;
+        font-size: 70px;
+        animation: swim 2.4s ease-in-out forwards;
+        will-change: transform;
+    }
+    @keyframes swim{
+        0%   { transform: translateX(0) translateY(0) rotate(0deg); }
+        50%  { transform: translateX(60vw) translateY(-25px) rotate(-8deg); }
+        100% { transform: translateX(130vw) translateY(0) rotate(4deg); }
+    }
+
+    .splash-text{
+        color: var(--white);
+        font-size: 2.2em;
+        text-align: center;
+        letter-spacing: 1px;
+        opacity: 0;
+        animation: textIn 0.8s ease forwards;
+        animation-delay: 1.7s;
+        padding: 0 20px;
+        text-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+    .splash-sub{
+        color: var(--foam);
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.05em;
+        margin-top: 10px;
+        opacity: 0;
+        animation: textIn 0.8s ease forwards;
+        animation-delay: 2s;
+    }
+    @keyframes textIn{
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Header ---------- */
+    header{
+        position: relative;
+        background: linear-gradient(120deg, var(--deep), var(--navy));
+        color: white;
+        text-align: center;
+        padding: 40px 20px 70px;
+        z-index: 1;
+    }
+    header h1{
+        margin: 0;
+        font-size: 2.4em;
+        font-weight: 800;
+    }
+    header p{
+        margin: 8px 0 0;
+        font-family: 'Nunito', sans-serif;
+        opacity: 0.9;
+    }
+    .wave{
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        line-height: 0;
+    }
+    .wave svg{ width: 100%; height: 70px; display: block; }
+
+    /* ---------- Jam analog ---------- */
+    .clock-system{
+        position: relative;
+        width: 300px;
+        height: 300px;
+        max-width: 90vw;
+        margin: 18px auto 0;
+    }
+    .clock-wrap{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+    }
+    .clock{
+        position: relative;
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #ffffff, var(--foam) 70%);
+        border: 6px solid var(--sand);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.25), inset 0 0 8px rgba(0,119,182,0.25);
+    }
+    .clock .tick{
+        position: absolute;
+        left: 50%;
+        top: 4px;
+        width: 2px;
+        height: 8px;
+        background: var(--navy);
+        transform-origin: 50% 61px;
+    }
+    .clock .num{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        font-family: 'Baloo 2', cursive;
+        font-size: 0.75em;
+        color: var(--navy);
+        font-weight: 700;
+        transform-origin: 0 0;
+    }
+    .hand{
+        position: absolute;
+        left: 50%;
+        bottom: 50%;
+        transform-origin: 50% 100%;
+        border-radius: 4px;
+        background: var(--deep);
+    }
+    .hand.hour{ width: 5px; height: 32px; margin-left: -2.5px; }
+    .hand.minute{ width: 3px; height: 46px; margin-left: -1.5px; background: var(--ocean); }
+    .hand.second{ width: 2px; height: 52px; margin-left: -1px; background: var(--coral); }
+    .clock-center{
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        margin: -6px 0 0 -6px;
+        border-radius: 50%;
+        background: var(--coral);
+        border: 2px solid white;
+        z-index: 3;
+    }
+    .clock-label{
+        text-align: center;
+        margin-top: 8px;
+        font-size: 0.85em;
+        opacity: 0.85;
+    }
+
+    /* ---------- Monumen dunia yang mengorbit jam (seolah tertarik gravitasinya) ---------- */
+    .orbit-item{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        text-align: center;
+        pointer-events: none;
+        z-index: 1;
+        will-change: transform;
+    }
+    .orbit-icon{
+        display: inline-block;
+        font-size: 30px;
+        background: rgba(255,255,255,0.85);
+        border-radius: 50%;
+        width: 46px;
+        height: 46px;
+        line-height: 46px;
+        box-shadow: 0 4px 10px rgba(2,62,125,0.25);
+        animation: breathe 3.4s ease-in-out infinite;
+    }
+    .orbit-cap{
+        display: block;
+        font-size: 0.62em;
+        color: white;
+        font-family: 'Nunito', sans-serif;
+        font-weight: 700;
+        margin-top: 3px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        white-space: nowrap;
+    }
+    @keyframes breathe{
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.12); }
+    }
+    @media (max-width: 480px){
+        .orbit-icon{ width: 36px; height: 36px; font-size: 22px; line-height: 36px; }
+        .orbit-cap{ font-size: 0.55em; }
+    }
+
+    /* ---------- Content ---------- */
+    .container{
+        position: relative;
+        z-index: 1;
+        max-width: 1100px;
+        margin: -30px auto 20px;
+        padding: 20px;
+        background: rgba(255,255,255,0.95);
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(2, 62, 125, 0.18);
+    }
+
+    .button-group{
+        text-align: center;
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+    button{
+        background: var(--sand);
+        color: var(--deep);
+        border: none;
+        padding: 14px 26px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: 700;
+        font-family: 'Baloo 2', cursive;
+        font-size: 1em;
+        transition: transform 0.15s ease, background 0.2s ease;
+        box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    }
+    button:hover{ background: var(--coral); transform: translateY(-2px); }
+    button:active{ transform: translateY(1px); box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+
+    .section{ display: none; }
+    .section.visible{
+        display: block;
+        animation: slideIn 0.4s ease-out;
+    }
+    @keyframes slideIn{
+        from { opacity: 0; transform: translateY(-14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden{ display: none; }
+
+    h2{
+        color: var(--navy);
+        border-bottom: 3px solid var(--sand);
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    ul{ line-height: 1.9; }
+
+    table{
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 12px;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    th, td{
+        border: 1px solid #d7ecf4;
+        padding: 12px;
+        text-align: left;
+    }
+    th{
+        background-color: var(--ocean);
+        color: white;
+        font-family: 'Baloo 2', cursive;
+        font-weight: 500;
+    }
+    tr:hover{ background-color: var(--foam); }
+
+    .toggle-inner-btn{
+        margin-bottom: 12px;
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+
+    footer{
+        position: relative;
+        text-align: center;
+        padding: 30px 10px 16px;
+        background: linear-gradient(120deg, var(--navy), var(--deep));
+        color: white;
+        margin-top: 30px;
+    }
+    footer .wave{ top: -69px; bottom: auto; transform: rotate(180deg); }
+    footer p{ margin: 0; font-family: 'Nunito', sans-serif; }
+</style>
+</head>
+<body class="no-scroll">
+
+    <!-- ===== Splash intro: dolphin swims by, then greeting ===== -->
+    <div id="splash">
+        <div class="dolphin-wrap">🐬</div>
+        <div class="splash-text">🌊 HALO, SELAMAT DATANG 🌊</div>
+        <div class="splash-sub">Jadwal Piket &amp; Roster Kelas VIII - 5</div>
+    </div>
+
+    <div class="bubbles" id="bubbles"></div>
+
+    <header>
+        <h1>🏫 CLASS VIII - 5 🐚</h1>
+        <p>Jadwal Piket &amp; Roster Pemelajaran</p>
+
+        <div class="clock-system" id="clockSystem">
+            <div class="orbit-item" data-monument>
+                <div class="orbit-icon">🏟️</div>
+                <span class="orbit-cap">Colosseum</span>
+            </div>
+            <div class="orbit-item" data-monument>
+                <div class="orbit-icon">🗼</div>
+                <span class="orbit-cap">Monas</span>
+            </div>
+            <div class="orbit-item" data-monument>
+                <div class="orbit-icon">🛕</div>
+                <span class="orbit-cap">Borobudur</span>
+            </div>
+            <div class="orbit-item" data-monument>
+                <div class="orbit-icon">🕰️</div>
+                <span class="orbit-cap">Jam Gadang</span>
+            </div>
+            <div class="orbit-item" data-monument>
+                <div class="orbit-icon">🏙️</div>
+                <span class="orbit-cap">Marina Bay Sands</span>
+            </div>
+
+            <div class="clock-wrap">
+                <div class="clock" id="clock">
+                    <!-- angka & tick dibuat otomatis lewat JS -->
+                    <div class="hand hour" id="hourHand"></div>
+                    <div class="hand minute" id="minuteHand"></div>
+                    <div class="hand second" id="secondHand"></div>
+                    <div class="clock-center"></div>
+                </div>
+            </div>
+        </div>
+        <p class="clock-label" id="clockLabel">--:--:--</p>
+
+        <div class="wave">
+            <svg viewBox="0 0 1200 70" preserveAspectRatio="none"><path d="M0,40 C300,90 900,0 1200,45 L1200,70 L0,70 Z" fill="#caf0f8"></path></svg>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="button-group">
+            <button onclick="toggleSection('struktur')">🐠 Struktur Kelas</button>
+            <button onclick="toggleSection('piket')">🧹 Jadwal Piket</button>
+            <button onclick="toggleSection('roster')">📚 Roster Pemelajaran</button>
+        </div>
+
+        <section id="struktur" class="section">
+            <h2>🐠 Struktur Kelas</h2>
+            <ul>
+                <li><strong>Ketua Kelas:</strong> Muhammad Arif 👑</li>
+                <li><strong>Wakil Ketua Kelas:</strong> Jihad Manaf 🤝</li>
+                <li><strong>Sekretaris:</strong> Aura Riskia ✏️</li>
+                <li><strong>Bendahara:</strong> Salsabila Marsyal 💰</li>
+                <li><strong>Kebersihan:</strong> Bilal Firdaus 🧼</li>
+                <li><strong>Ketua Keamanan:</strong> Muhammad Riski 🛡️</li>
+                <li><strong>Anggota:</strong> Siswa lainnya 🎓</li>
+            </ul>
+        </section>
+
+        <section id="piket" class="section">
+            <h2>🧹 Jadwal Piket</h2>
+            <p>Jadwal piket telah diperbarui dengan kelompok siswa. Klik tombol di bawah untuk menampilkan atau menyembunyikan tabel!</p>
+            <button class="toggle-inner-btn" onclick="toggleSection('piketTable')">Tampilkan / Sembunyikan Jadwal Piket</button>
+            <table id="piketTable" class="hidden">
+                <tr>
+                    <th>Hari</th>
+                    <th>Kelompok/Tugas</th>
+                </tr>
+                <tr>
+                    <td>Senin</td>
+                    <td>
+                        <ul>
+                            <li>Azka</li>
+                            <li>Afifa</li>
+                            <li>Rehan</li>
+                            <li>Afifa</li>
+                            <li>Silvia</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Selasa</td>
+                    <td>
+                        <ul>
+                            <li>Bilal</li>
+                            <li>Arif</li>
+                            <li>Raisul</li>
+                            <li>Syakilla</li>
+                            <li>Vika</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Rabu</td>
+                    <td>
+                        <ul>
+                            <li>Aufar</li>
+                            <li>Faiz</li>
+                            <li>Zikri</li>
+                            <li>Aura</li>
+                            <li>Aurel</li>
+                            <li>Magfirah</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Kamis</td>
+                    <td>
+                        <ul>
+                            <li>Manap</li>
+                            <li>Khadafi</li>
+                            <li>Syafwan</li>
+                            <li>Zahara</li>
+                            <li>Yasmin</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Jumat</td>
+                    <td>
+                        <ul>
+                            <li>Hera</li>
+                            <li>Salsa</li>
+                            <li>Zahira</li>
+                            <li>Nabil</li>
+                            <li>Adit</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Sabtu</td>
+                    <td>
+                        <ul>
+                            <li>Riza</li>
+                            <li>Farah</li>
+                            <li>Fatih</li>
+                            <li>Alvaro</li>
+                            <li>Capa</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="roster" class="section">
+            <h2>📚 Roster Pemelajaran</h2>
+            <button class="toggle-inner-btn" onclick="toggleSection('rosterTable')">Tampilkan / Sembunyikan Roster</button>
+            <table id="rosterTable" class="hidden">
+                <tr>
+                    <th>Hari</th>
+                    <th>Mata Pelajaran</th>
+                </tr>
+                <tr>
+                    <td>Senin</td>
+                    <td>
+                        <ul>
+                            <li>Seni Rupa 🎨</li>
+                            <li>Bahasa Indonesia 📝</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Selasa</td>
+                    <td>
+                        <ul>
+                            <li>TIK 💻</li>
+                            <li>PP 🏛️</li>
+                            <li>Bahasa Inggris 🇺🇸</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Rabu</td>
+                    <td>
+                        <ul>
+                            <li>MTK ➕</li>
+                            <li>Bahasa Inggris 🇺🇸</li>
+                            <li>IPA 🧪</li>
+                            <li>IPS 🌍</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Kamis</td>
+                    <td>
+                        <ul>
+                            <li>BK 🧑‍🏫</li>
+                            <li>Bahasa Indonesia 📝</li>
+                            <li>PAI 🙏</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Jumat</td>
+                    <td>
+                        <ul>
+                            <li>IPS 🌍</li>
+                            <li>MTK ➕</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Sabtu</td>
+                    <td>
+                        <ul>
+                            <li>PJOK ⚽</li>
+                            <li>IPA 🧪</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+            <p><em>Catatan: PP diasumsikan sebagai Pendidikan Pancasila, BK sebagai Bimbingan Konseling. 🎒</em></p>
+        </section>
+    </div>
+
+    <footer>
+        <div class="wave">
+            <svg viewBox="0 0 1200 70" preserveAspectRatio="none"><path d="M0,40 C300,90 900,0 1200,45 L1200,70 L0,70 Z" fill="#023e7d"></path></svg>
+        </div>
+        <p>&copy; 2026-2027 CLASS VIII - 5. Dibuat dengan ❤️ untuk siswa!</p>
+        <p style="font-size: 0.75em; opacity: 0.6; margin-top: 6px;">Website by YZN</p>
+    </footer>
+
+    <script>
+        // Satu fungsi toggle yang bekerja untuk section utama maupun tabel dalam
+        function toggleSection(id) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            if (element.classList.contains('section')) {
+                element.classList.toggle('visible');
+            } else {
+                element.classList.toggle('hidden');
+            }
+        }
+
+        // Animasi: monumen dunia meluncur dari samping menuju jam, lalu lanjut mengorbit dengan mulus
+        (function orbitMonuments(){
+            const items = document.querySelectorAll('.orbit-item');
+            const system = document.getElementById('clockSystem');
+            const count = items.length;
+            const angleOffsets = Array.from(items).map((_, i) => (360 / count) * i);
+            const rotationMs = 24000;      // satu putaran penuh setiap 24 detik
+            const entranceMs = 1300;       // durasi meluncur masuk per item
+            const staggerMs = 220;         // jeda antar item biar masuk satu-satu
+            const sideDistance = 380;      // seberapa jauh titik awal di samping (offscreen)
+            let start = null;
+
+            function getRadius(){
+                return system.clientWidth < 260 ? 88 : 118;
+            }
+
+            function easeOutCubic(t){
+                return 1 - Math.pow(1 - t, 3);
+            }
+
+            function frame(ts){
+                if (!start) start = ts;
+                const elapsed = ts - start;
+                const radius = getRadius();
+
+                items.forEach((el, i) => {
+                    const delay = i * staggerMs;
+                    const targetAngleRad = angleOffsets[i] * (Math.PI / 180);
+                    const targetX = Math.cos(targetAngleRad) * radius;
+                    const targetY = Math.sin(targetAngleRad) * radius;
+                    const localTime = elapsed - delay;
+
+                    let x, y;
+                    if (localTime <= 0) {
+                        // belum waktunya masuk, tunggu di luar layar (samping)
+                        x = -sideDistance;
+                        y = targetY;
+                    } else if (localTime < entranceMs) {
+                        // fase meluncur dari samping menuju posisi orbit awal
+                        const p = easeOutCubic(localTime / entranceMs);
+                        x = -sideDistance + (targetX - (-sideDistance)) * p;
+                        y = targetY;
+                    } else {
+                        // fase mengorbit terus-menerus, lanjut mulus dari posisi masuk tadi
+                        const orbitElapsed = localTime - entranceMs;
+                        const angleTraveled = (orbitElapsed / rotationMs) * 360;
+                        const angleRad = (angleOffsets[i] + angleTraveled) * (Math.PI / 180);
+                        x = Math.cos(angleRad) * radius;
+                        y = Math.sin(angleRad) * radius;
+                    }
+
+                    el.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) translate(-50%, -50%)';
+                });
+
+                requestAnimationFrame(frame);
+            }
+            requestAnimationFrame(frame);
+        })();
+
+        // Gambar angka 1-12 dan garis tick di sekeliling jam (sekali saja)
+        (function buildClockFace(){
+            const clock = document.getElementById('clock');
+            const radius = 65;
+            for (let n = 1; n <= 12; n++) {
+                const angle = (n * 30) * (Math.PI / 180);
+                const num = document.createElement('div');
+                num.className = 'num';
+                num.textContent = n;
+                const x = radius + Math.sin(angle) * (radius - 20) - 6;
+                const y = radius - Math.cos(angle) * (radius - 20) - 8;
+                num.style.left = x + 'px';
+                num.style.top = y + 'px';
+                clock.appendChild(num);
+            }
+            for (let t = 0; t < 60; t++) {
+                if (t % 5 === 0) continue; // posisi ini sudah ada angka
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                tick.style.transform = 'rotate(' + (t * 6) + 'deg)';
+                tick.style.opacity = '0.35';
+                clock.appendChild(tick);
+            }
+        })();
+
+        // Jalankan jarum jam analog secara real-time
+        function updateClock() {
+            const now = new Date();
+            const h = now.getHours() % 12;
+            const m = now.getMinutes();
+            const s = now.getSeconds();
+
+            const hourDeg = (h * 30) + (m * 0.5);
+            const minuteDeg = (m * 6) + (s * 0.1);
+            const secondDeg = s * 6;
+
+            document.getElementById('hourHand').style.transform = 'rotate(' + hourDeg + 'deg)';
+            document.getElementById('minuteHand').style.transform = 'rotate(' + minuteDeg + 'deg)';
+            document.getElementById('secondHand').style.transform = 'rotate(' + secondDeg + 'deg)';
+
+            const label = now.getHours().toString().padStart(2, '0') + ':' +
+                          m.toString().padStart(2, '0') + ':' +
+                          s.toString().padStart(2, '0');
+            document.getElementById('clockLabel').textContent = label;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Buat gelembung dekoratif secukupnya (ringan, hanya transform+opacity)
+        (function createBubbles(){
+            const wrap = document.getElementById('bubbles');
+            const total = 14;
+            for (let i = 0; i < total; i++) {
+                const b = document.createElement('div');
+                const size = 8 + Math.random() * 22;
+                b.className = 'bubble';
+                b.style.width = size + 'px';
+                b.style.height = size + 'px';
+                b.style.left = Math.random() * 100 + 'vw';
+                b.style.animationDuration = (6 + Math.random() * 8) + 's';
+                b.style.animationDelay = (Math.random() * 8) + 's';
+                wrap.appendChild(b);
+            }
+        })();
+
+        // Hilangkan splash setelah animasi selesai, lalu izinkan scroll
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                const splash = document.getElementById('splash');
+                splash.classList.add('fade-out');
+                document.body.classList.remove('no-scroll');
+                setTimeout(function () { splash.style.display = 'none'; }, 850);
+            }, 3200);
+        });
+    </script>
+</body>
+</html>
